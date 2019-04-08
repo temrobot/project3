@@ -33,16 +33,15 @@ void process_image_callback(const sensor_msgs::Image img)
     int intensity = 0;
     int mean_index = 0;
     float linear_vel = 0;
-    float max_linear_vel = 0.2;
+    float max_linear_vel = 0.8;
     float angular_rate = 0.0;
-    float turn_gain = -0.01;
+    float turn_gain = -0.05;
 
     ROS_INFO_STREAM("Image height x width "<<img.height<<" x "<<img.width<<" Image encoding "<<img.encoding);
 
     // TODO: Loop through each pixel in the image and check if there's a bright white one
     while ( i<(img.height * img.width * 3) )
     {
-        //ROS_INFO_STREAM("pix RGB "<<int(img.data[i])<<" "<<int(img.data[i+1])<<" "<<int(img.data[i+2]));
         intensity = int(img.data[i]);        
         if (intensity > white_pix_thresh)
         {
@@ -55,35 +54,37 @@ void process_image_callback(const sensor_msgs::Image img)
     if (num_white_pix != 0)
     {
         mean_index = sum_white_pix_index / (num_white_pix * 3);
-        ROS_INFO_STREAM("mean_index "<<mean_index<<" num_white_pix "<<num_white_pix);
-        // Then, identify if this pixel falls in the left, mid, or right side of the image
-        linear_vel = 5000/(float(num_white_pix));
-        if (linear_vel>max_linear_vel)
-            linear_vel = max_linear_vel;
 
+        // Then, identify if this pixel falls in the left, mid, or right side of the image
         angular_rate = turn_gain * (float(mean_index) - float(img.width)/2.0);
+        //linear_vel = max_linear_vel;
+
         ROS_INFO_STREAM("angular_rate "<<angular_rate<<" mean_index "<<mean_index);
 
         if (mean_index < 250)
+        {
+            linear_vel = 0.5;
             drive_robot(linear_vel, angular_rate);
-
+        }
         else if (mean_index < 550)
+        {
+            linear_vel = 1.0;
             drive_robot(linear_vel, angular_rate);
-
+        }
         else
+        {
+            linear_vel = 0.5;
             drive_robot(linear_vel, angular_rate);
+        }
     }
     else
     {
         ROS_INFO_STREAM("No white ball");
-            drive_robot(0.0, 0.0);
+        linear_vel = 0.0;
+        angular_rate = 0.0;
+        drive_robot(linear_vel, angular_rate);
     }
 
-    
-
-
-    // Depending on the white ball position, call the drive_bot function and pass velocities to it
-    // Request a stop when there's no white ball seen by the camera
 }
 
 int main(int argc, char** argv)
