@@ -42,8 +42,8 @@ void process_image_callback(const sensor_msgs::Image img)
     // TODO: Loop through each pixel in the image and check if there's a bright white one
     while ( i<(img.height * img.width * 3) )
     {
-        intensity = int(img.data[i]);        
-        if (intensity > white_pix_thresh)
+        intensity = int(img.data[i]) + int(img.data[i+1]) + int(img.data[i+2]);        
+        if (intensity > (3*white_pix_thresh))
         {
             num_white_pix++;
             white_pix_index = i%(img.width*3);
